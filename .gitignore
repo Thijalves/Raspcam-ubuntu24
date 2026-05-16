@@ -1,0 +1,18 @@
+# Build-time source repos (cloned by setup.sh to ~/rpi-build, not here)
+libcamera/
+rpicam-apps/
+
+# Output images produced by demo.py
+*.jpg
+*.png
+*.h264
+*.mp4
+
+# Python
+__pycache__/
+*.pyc
+
+# Editor / OS
+.vscode/
+*.swp
+.DS_Store
