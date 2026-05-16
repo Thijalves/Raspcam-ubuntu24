@@ -1,4 +1,4 @@
-# rpi-camera
+# Raspcam-ubuntu24
 
 Headless Raspberry Pi camera stack with OpenCV — one script installs everything from source, one script captures and processes a frame.
 
