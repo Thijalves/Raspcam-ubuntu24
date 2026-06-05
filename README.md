@@ -71,6 +71,27 @@ camera → original.jpg
 
 ---
 
+## Troubleshooting
+
+**`IndexError: list index out of range` inside picamera2**
+libcamera initialised but detected no cameras. Most common causes:
+- You did not reboot after `setup.sh` (the dtoverlay only loads at boot)
+- The camera ribbon cable is loose or inserted the wrong way
+- Wrong overlay in `setup.sh` (`CAMERA_OVERLAY` variable)
+
+Run `rpicam-hello --list-cameras` to confirm what libcamera sees.
+
+**`ModuleNotFoundError: No module named 'picamera2'`**
+You ran `sudo python3 demo.py`. Do **not** use sudo — picamera2 is installed in user space (`~/.local/lib/`). Run `python3 demo.py` directly. Camera access is granted via the `video` group (added by `setup.sh`), which takes effect after a reboot.
+
+**`scipy … requires numpy<1.28, but you have numpy 2.4.6`**
+A pre-existing conflict between system-installed scipy and the numpy version pip resolves. `setup.sh` now pins numpy to `<1.28` to keep all packages consistent.
+
+**`Command 'python' not found`**
+Ubuntu 24 ships `python3`, not `python`. Use `python3 demo.py`.
+
+---
+
 ## Known quirks
 
 **`libcamera` Python bindings path**

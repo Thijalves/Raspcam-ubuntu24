@@ -17,11 +17,12 @@ sudo apt remove --purge -y rpicam-apps libcamera-dev libcamera0 2>/dev/null || t
 # ── 2. Install build dependencies ───────────────────────────────────────────
 echo ""
 echo "==> [2/8] Installing build dependencies..."
+sudo apt update -q
 sudo apt install -y \
     git cmake ninja-build meson \
     python3-pip python3-jinja2 python3-yaml python3-ply \
     libboost-dev libboost-program-options-dev \
-    libgnutls28-dev openssl libtiff5-dev pybind11-dev \
+    libgnutls28-dev openssl libtiff-dev pybind11-dev \
     libglib2.0-dev libgstreamer-plugins-base1.0-dev \
     libdrm-dev libexif-dev libjpeg-dev libpng-dev \
     libcap-dev v4l-utils
@@ -120,7 +121,7 @@ fi
 # ── 7. Install Python packages and patch picamera2 for headless ──────────────
 echo ""
 echo "==> [7/8] Installing Python packages..."
-pip install opencv-python-headless picamera2 --break-system-packages -q
+pip install "numpy>=1.21.6,<1.28.0" opencv-python-headless picamera2 --break-system-packages -q
 
 echo "    Patching picamera2 for headless (no pykms)..."
 python3 - <<'EOF'
@@ -154,8 +155,10 @@ text = drm.read_text()
 if old_drm in text:
     drm.write_text(text.replace(old_drm, new_drm))
     print(f"    Patched {drm}")
-else:
+elif new_drm in text:
     print(f"    drm_preview.py already patched.")
+else:
+    print(f"    WARNING: drm_preview.py pattern not found — picamera2 may have changed upstream. Headless import might fail.")
 
 old_init = "from .drm_preview import DrmPreview\n"
 new_init = (
@@ -165,11 +168,13 @@ new_init = (
     "    DrmPreview = None\n"
 )
 text = init.read_text()
-if old_init in text and new_init not in text:
+if new_init in text:
+    print(f"    previews/__init__.py already patched.")
+elif old_init in text:
     init.write_text(text.replace(old_init, new_init))
     print(f"    Patched {init}")
 else:
-    print(f"    previews/__init__.py already patched.")
+    print(f"    WARNING: previews/__init__.py pattern not found — picamera2 may have changed upstream.")
 EOF
 
 # ── 8. Add user to video group ───────────────────────────────────────────────
@@ -179,6 +184,8 @@ sudo usermod -aG video "$USER"
 
 echo ""
 echo "==> Setup complete."
+echo "    IMPORTANT: picamera2 was installed in user space (~/.local)."
+echo "    Always run demo.py as your normal user — never with sudo."
 echo "    A reboot is required to activate the camera overlay."
 read -r -p "    Reboot now? [y/N] " response
 if [[ "$response" =~ ^[Yy]$ ]]; then
